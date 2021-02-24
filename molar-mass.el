@@ -46,7 +46,7 @@
 	  (push (car elements) elements-aux))
       (setq elements (cdr elements)))
     (setq elements (reverse elements-aux))
-	 
+
     (print
      (format "Molar mass of %s : %.3f g/mol (uma)"   ;; 3 decimal digits
 	     data
@@ -75,9 +75,10 @@ The function returns pairs of (atoms - elements)"
        ((member "(" elem)
 	(setq p2 (cadr (member ")" elem)))
 	(setq p1 (molar-mass-total-mass
-		  (molar-mass-pairs-list (molar-mass-cut-list-in elem "(" ")"))))
+		  (molar-mass-pairs-list
+                   (molar-mass-cut-list-in elem "(" ")"))))
 	(setq elem (molar-mass-cut-list-out elem "(" ")")))
-	       
+
        ;; If first is upcase (element) and second is number
        ((and (molar-mass-upcase-p (car elem))
 	     (molar-mass-number-p (cadr elem)))
@@ -95,7 +96,8 @@ The function returns pairs of (atoms - elements)"
        ((and (molar-mass-upcase-p (car elem))
 	     (and (not (molar-mass-upcase-p (cadr elem)))
 		  (not (molar-mass-number-p (cadr elem)))))
-	(setq p1 (cadr (assoc (concat (car elem) (cadr elem)) elements-mass)))
+	(setq p1 (cadr (assoc (concat (car elem) (cadr elem))
+                              elements-mass)))
 	(if (molar-mass-number-p (caddr elem))
 	    (progn
 	      (setq p2 (caddr elem))
