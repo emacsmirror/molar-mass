@@ -82,7 +82,7 @@ The function returns pairs of (atoms - elements)"
        ;; If first is upcase (element) and second is number
        ((and (molar-mass-upcase-p (car elem))
 	     (molar-mass-number-p (cadr elem)))
-	(setq p1 (cadr (assoc (car elem) elements-mass)))
+	(setq p1 (cadr (assoc (car elem) molar-mass-elements-mass)))
 	(if (not (molar-mass-number-p (caddr elem)))
 	    (progn
 	      (setq p2 (cadr elem))
@@ -97,7 +97,7 @@ The function returns pairs of (atoms - elements)"
 	     (and (not (molar-mass-upcase-p (cadr elem)))
 		  (not (molar-mass-number-p (cadr elem)))))
 	(setq p1 (cadr (assoc (concat (car elem) (cadr elem))
-                              elements-mass)))
+                              molar-mass-elements-mass)))
 	(if (molar-mass-number-p (caddr elem))
 	    (progn
 	      (setq p2 (caddr elem))
@@ -114,7 +114,7 @@ The function returns pairs of (atoms - elements)"
        ;; If there're two upcase letters (two elements)
        ((and (molar-mass-upcase-p (car elem))
 	     (molar-mass-upcase-p (cadr elem)))
-	(setq p1 (cadr (assoc (car elem) elements-mass)))
+	(setq p1 (cadr (assoc (car elem) molar-mass-elements-mass)))
 	(setq p2 "1")
 	(setq elem (cdr elem))))
       ;; Update list pairs
