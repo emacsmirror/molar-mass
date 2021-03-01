@@ -7,7 +7,7 @@ mass or molecular weight) of a given molecule.
 
 After installing the package, add this to your init file:
 
-`(require 'molar-mass)
+`(require 'molar-mass)`
 
 ## Usage
 
