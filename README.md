@@ -3,6 +3,12 @@
 Molar-mass is an utility that calculates molar mass (aka molecular
 mass or molecular weight) of a given molecule.
 
+## Installation
+
+After installing the package, add this to your init file:
+
+`(require 'molar-mass)
+
 ## Usage
 
 It works interactively (entering your formula at the minibuffer) and
