@@ -6,7 +6,7 @@
 ;; Author: Sergi Ruiz Trepat
 ;; Created: 2021
 ;; Version: 0.1
-;; Keywords: chemistry
+;; Keywords: convenience, chemistry
 ;; Homepage: https://github.com/sergiruiztrepat/molar-mass.el
 ;;
 ;; Molar-mass is free software; you can redistribute it and/or modify it
@@ -285,17 +285,17 @@ The function returns pairs of (atoms - elements)"
       (setq list (cdr list)))
     (reverse $cut-list)))
 
-(defun molar-mass-errors (error-code &optional data)
+(defun molar-mass-errors (error-code &optional error-data)
   "ERROR-CODE is the code for error-types, DATA is an optional data to
 complete the error string."
   (cond ((= error-code 1)
 	 (error "Error: Lacks a number after closing parentheses."))
 
 	((= error-code 2)
-	 (error "Error: %s is not a valid element." data))
+	 (error "Error: %s is not a valid element." error-data))
 
 	((= error-code 3)
-	 (error "There is an error in your formula." data))))
+	 (error "There is an error in your formula." error-data))))
 
 (provide 'molar-mass)
 
