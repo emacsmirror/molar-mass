@@ -167,6 +167,10 @@
   "ELEM is a processed list of pairs (atoms - atomic mass).
 Returns the total mass of the molecule."
   (let (($total-mass 0))
+    (if (or 
+	 (/= (% (length elem) 2) 0)
+	 (member 0 elem))
+	(molar-mass-errors 3))
     (while elem
       (setq $total-mass
 	    (+ $total-mass
@@ -184,7 +188,7 @@ The function returns pairs of (atoms - elements)"
       (cond
        ;; If paren in list, molar-mass-cut-list-in and call recursively.
        ((member "(" elem)
-	(setq p2 (cadr (member ")" elem)))
+	(or (setq p2 (cadr (member ")" elem))) (molar-mass-errors 1)) 
 	(setq p1 (molar-mass-total-mass
 		  (molar-mass-pairs-list
                    (molar-mass-cut-list-in elem "(" ")"))))
@@ -193,7 +197,10 @@ The function returns pairs of (atoms - elements)"
        ;; If first is upcase (element) and second is number
        ((and (molar-mass-upcase-p (car elem))
 	     (molar-mass-number-p (cadr elem)))
-	(setq p1 (cadr (assoc (car elem) molar-mass-elements-mass)))
+	(or
+	 (setq p1 (cadr (assoc (car elem) molar-mass-elements-mass)))
+	 (molar-mass-errors 2 (car elem)))
+	 
 	(if (not (molar-mass-number-p (caddr elem)))
 	    (progn
 	      (setq p2 (cadr elem))
@@ -207,8 +214,10 @@ The function returns pairs of (atoms - elements)"
        ((and (molar-mass-upcase-p (car elem))
 	     (and (not (molar-mass-upcase-p (cadr elem)))
 		  (not (molar-mass-number-p (cadr elem)))))
-	(setq p1 (cadr (assoc (concat (car elem) (cadr elem))
+	(or
+	 (setq p1 (cadr (assoc (concat (car elem) (cadr elem))
                               molar-mass-elements-mass)))
+	 (molar-mass-errors 2 (concat (car elem) (cadr elem))))
 	(if (molar-mass-number-p (caddr elem))
 	    (progn
 	      (setq p2 (caddr elem))
@@ -225,9 +234,15 @@ The function returns pairs of (atoms - elements)"
        ;; If there're two upcase letters (two elements)
        ((and (molar-mass-upcase-p (car elem))
 	     (molar-mass-upcase-p (cadr elem)))
-	(setq p1 (cadr (assoc (car elem) molar-mass-elements-mass)))
+	(or
+	 (setq p1 (cadr (assoc (car elem) molar-mass-elements-mass)))
+	 (molar-mass-errors 2 (car elem)))
 	(setq p2 "1")
-	(setq elem (cdr elem))))
+	(setq elem (cdr elem)))
+       
+       ;; If not any cond
+       (t (molar-mass-errors 3)))
+      
       ;; Update list pairs
       (setq pairs (cons p1 pairs))
       (setq pairs (cons (string-to-number p2) pairs)))
@@ -269,6 +284,18 @@ The function returns pairs of (atoms - elements)"
       (push (car list) $cut-list)
       (setq list (cdr list)))
     (reverse $cut-list)))
+
+(defun molar-mass-errors (error-code &optional data)
+  "ERROR-CODE is the code for error-types, DATA is an optional data to
+complete the error string."
+  (cond ((= error-code 1)
+	 (error "Error: Lacks a number after closing parentheses."))
+
+	((= error-code 2)
+	 (error "Error: %s is not a valid element." data))
+
+	((= error-code 3)
+	 (error "There is an error in your formula." data))))
 
 (provide 'molar-mass)
 
