@@ -140,6 +140,7 @@
     ("Mt" 268.00)
     ("Hs" 277.00)))
 
+;;;###autoload
 (defun molar-mass ()
   "Calculates molar mass of a molecule."
   (interactive)
@@ -167,7 +168,7 @@
   "ELEM is a processed list of pairs (atoms - atomic mass).
 Returns the total mass of the molecule."
   (let (($total-mass 0))
-    (if (or 
+    (if (or
 	 (/= (% (length elem) 2) 0)
 	 (member 0 elem))
 	(molar-mass-errors 3))
@@ -188,7 +189,7 @@ The function returns pairs of (atoms - elements)"
       (cond
        ;; If paren in list, molar-mass-cut-list-in and call recursively.
        ((member "(" elem)
-	(or (setq p2 (cadr (member ")" elem))) (molar-mass-errors 1)) 
+	(or (setq p2 (cadr (member ")" elem))) (molar-mass-errors 1))
 	(setq p1 (molar-mass-total-mass
 		  (molar-mass-pairs-list
                    (molar-mass-cut-list-in elem "(" ")"))))
@@ -249,6 +250,14 @@ The function returns pairs of (atoms - elements)"
     ;; return pairs
     pairs))
 
+(defun molar-mass-progm (formula)
+  "Function to use it programmaticly with string FORMULA.
+
+Returns float number."
+  (molar-mass-total-mass
+   (molar-mass-pairs-list
+    (mapcar 'char-to-string formula))))
+
 (defun molar-mass-upcase-p (char)
   "Return t if CHAR is upcase, nil if not."
   (setq case-fold-search nil)
@@ -286,16 +295,18 @@ The function returns pairs of (atoms - elements)"
     (reverse $cut-list)))
 
 (defun molar-mass-errors (error-code &optional error-data)
-  "ERROR-CODE is the code for error-types, DATA is an optional data to
-complete the error string."
+  "Function to control errors.
+
+ERROR-CODE is the code for error-types, ERROR-DATA is an optional
+data to complete the error string."
   (cond ((= error-code 1)
-	 (error "Error: Lacks a number after closing parentheses."))
+	 (error "Error: Lacks a number after closing parentheses"))
 
 	((= error-code 2)
-	 (error "Error: %s is not a valid element." error-data))
+	 (error "Error: %s is not a valid element" error-data))
 
 	((= error-code 3)
-	 (error "There is an error in your formula." error-data))))
+	 (error "There is an error in your formula" error-data))))
 
 (provide 'molar-mass)
 
