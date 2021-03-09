@@ -30,48 +30,48 @@
 ;;; Code:
 
 (defconst molar-mass-elements-mass
-  '(("H" 1.0079)
-    ("He" 4.0026)
+  '(("H" 1.00794)
+    ("He" 4.002602)
     ("Li" 6.941)
-    ("Be" 9.0122)
+    ("Be" 9.012182)
     ("B" 10.811)
     ("C" 12.0107)
     ("N" 14.0067)
     ("O" 15.9994)
-    ("F" 18.9984)
+    ("F" 18.9984032)
     ("Ne" 20.1797)
-    ("Na" 22.9897)
+    ("Na" 22.98976928)
     ("Mg" 24.305)
-    ("Al" 26.9815)
+    ("Al" 26.9815386)
     ("Si" 28.0855)
-    ("P" 30.9738)
+    ("P" 30.973762)
     ("S" 32.065)
     ("Cl" 35.453)
-    ("K" 39.0983)
     ("Ar" 39.948)
+    ("K" 39.0983)
     ("Ca" 40.078)
-    ("Sc" 44.9559)
+    ("Sc" 44.955912)
     ("Ti" 47.867)
     ("V" 50.9415)
     ("Cr" 51.9961)
-    ("Mn" 54.938)
+    ("Mn" 54.938045)
     ("Fe" 55.845)
     ("Ni" 58.6934)
     ("Co" 58.9332)
     ("Cu" 63.546)
-    ("Zn" 65.39)
+    ("Zn" 65.409)
     ("Ga" 69.723)
     ("Ge" 72.64)
     ("As" 74.9216)
     ("Se" 78.96)
     ("Br" 79.904)
-    ("Kr" 83.8)
+    ("Kr" 83.798)
     ("Rb" 85.4678)
     ("Sr" 87.62)
-    ("Y" 88.9059)
+    ("Y" 88.90585)
     ("Zr" 91.224)
-    ("Nb" 92.9064)
-    ("Mo" 95.94)
+    ("Nb" 92.90638)
+    ("Mo" 95.94)                
     ("Tc" 98.00)
     ("Ru" 101.07)
     ("Rh" 102.9055)
@@ -81,34 +81,34 @@
     ("In" 114.818)
     ("Sn" 118.71)
     ("Sb" 121.76)
-    ("I" 126.9045)
     ("Te" 127.6)
+    ("I" 126.90447)
     ("Xe" 131.293)
-    ("Cs" 132.9055)
+    ("Cs" 132.9054519)
     ("Ba" 137.327)
-    ("La" 138.9055)
+    ("La" 138.90547)
     ("Ce" 140.116)
-    ("Pr" 140.9077)
-    ("Nd" 144.24)
+    ("Pr" 140.90765)
+    ("Nd" 144.242)
     ("Pm" 145.00)
     ("Sm" 150.36)
     ("Eu" 151.964)
     ("Gd" 157.25)
-    ("Tb" 158.9253)
+    ("Tb" 158.92535)
     ("Dy" 162.5)
-    ("Ho" 164.9303)
+    ("Ho" 164.93032)
     ("Er" 167.259)
-    ("Tm" 168.9342)
+    ("Tm" 168.93421)
     ("Yb" 173.04)
     ("Lu" 174.967)
     ("Hf" 178.49)
-    ("Ta" 180.9479)
+    ("Ta" 180.94788)
     ("W" 183.84)
     ("Re" 186.207)
     ("Os" 190.23)
     ("Ir" 192.217)
-    ("Pt" 195.078)
-    ("Au" 196.9665)
+    ("Pt" 195.084)
+    ("Au" 196.966569)
     ("Hg" 200.59)
     ("Tl" 204.3833)
     ("Pb" 207.2)
@@ -119,10 +119,10 @@
     ("Fr" 223.00)
     ("Ra" 226.00)
     ("Ac" 227.00)
-    ("Pa" 231.0359)
-    ("Th" 232.0381)
+    ("Th" 232.03806)
+    ("Pa" 231.03588)
+    ("U" 238.02891)
     ("Np" 237.00)
-    ("U" 238.0289)
     ("Am" 243.00)
     ("Pu" 244.00)
     ("Cm" 247.00)
@@ -132,13 +132,22 @@
     ("Fm" 257.00)
     ("Md" 258.00)
     ("No" 259.00)
-    ("Rf" 261.00)
     ("Lr" 262.00)
+    ("Rf" 261.00)
     ("Db" 262.00)
-    ("Bh" 264.00)
     ("Sg" 266.00)
+    ("Bh" 264.00)
+    ("Hs" 277.00)
     ("Mt" 268.00)
-    ("Hs" 277.00)))
+    ("Ds" 281.00)
+    ("Rg" 272.00)
+    ("Cn" 285.00)
+    ("Fl" 289.00)
+    ("Lv" 292.00)
+    ))
+
+(defcustom molar-mass-significant-digits 3
+  "Number of significant digits of the result of molar mass")
 
 ;;;###autoload
 (defun molar-mass ()
@@ -150,6 +159,10 @@
 		    (region-end))
 		 (read-string "Formula: ")))
 	 (elements (mapcar 'char-to-string data))
+	 (result-string-format
+	  (concat "Molar mass of %s: %."
+		  (int-to-string molar-mass-significant-digits)
+		  "f g/mol (uma)"))
 	 (elements-aux '()))   ;; auxiliar list to clean blanks and
     ;; dashes in the next while
     
@@ -160,7 +173,7 @@
     (setq elements (reverse elements-aux))
 
     (print
-     (format "Molar mass of %s : %.3f g/mol (uma)"   ;; 3 decimal digits
+     (format result-string-format
 	     data
 	     (molar-mass-total-mass (molar-mass-pairs-list elements))))))
 
@@ -260,29 +273,29 @@ Returns float number."
 
 (defun molar-mass-upcase-p (char)
   "Return t if CHAR is upcase, nil if not."
-  (setq case-fold-search nil)
-  (ignore-errors
-    (if (string-match-p "[A-Z]" char) t)))
-
+  (let ((case-fold-search nil))
+    (if char 
+      (string-match-p "[A-Z]" char))))
+  
 (defun molar-mass-number-p (char)
   "Return t if CHAR is a number, nil if not."
-  (ignore-errors
+  (if char
     (if (string-match-p "[0-9]" char) t)))
 
 (defun molar-mass-cut-list-in (list first last)
   "Cut LIST and return another list with elements between FIRST and LAST."
-  (let (($cut-list '())) ;; list to return
+  (let ((cut-list '())) ;; list to return
     (setq list (cdr (member first list)))
     (while (and list (not (equal (car list) last)))
-      (push (car list) $cut-list)
+      (push (car list) cut-list)
       (setq list (cdr list)))
-    (reverse $cut-list)))
+    (reverse cut-list)))
     
 (defun molar-mass-cut-list-out (list first last)
   "Cut LIST and return another list with elements not between FIRST and LAST."
-  (let (($cut-list '()))
+  (let ((cut-list '()))
     (while (not (equal (car list) first))
-      (push (car list) $cut-list)
+      (push (car list) cut-list)
       (setq list (cdr list)))
 
     (while (not (equal (car list) last))
@@ -290,24 +303,22 @@ Returns float number."
     
     (setq list (cddr list))
     (while list
-      (push (car list) $cut-list)
+      (push (car list) cut-list)
       (setq list (cdr list)))
-    (reverse $cut-list)))
+    (reverse cut-list)))
 
-(defun molar-mass-errors (error-code &optional error-data)
-  "Function to control errors.
+(defun molar-mass-error-lacks-paren () 
+  "Error function when lacks a number after parentheses"
+  (error "Error: Lacks a number after closing parentheses"))
 
-ERROR-CODE is the code for error-types, ERROR-DATA is an optional
-data to complete the error string."
-  (cond ((= error-code 1)
-	 (error "Error: Lacks a number after closing parentheses"))
+(defun molar-mass-error-non-valid-element (error-data)
+  "ERROR-DATA provides the letter not corresponding to an element"
+  (error "Error: %s is not a valid element" error-data))
 
-	((= error-code 2)
-	 (error "Error: %s is not a valid element" error-data))
-
-	((= error-code 3)
-	 (error "There is an error in your formula" error-data))))
-
+(defun molar-mass-error-in-formula (error-data)
+  "ERROR-DATA provides the formula when there is an unknown error"
+  (error "There is an error in your formula" error-data))
+  
 (provide 'molar-mass)
 
 ;;; molar-mass.el ends here
