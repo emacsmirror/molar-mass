@@ -219,9 +219,8 @@ The function returns pairs of (atoms - elements)"
 	      (setq p2 (cadr elem))
 	      (setq elem (cddr elem)))
 	  ;; If there's two numbers
-	  (progn
-	    (setq p2 (concat (cadr elem) (caddr elem)))
-	    (setq elem (cdddr elem)))))
+	  ((setq p2 (concat (cadr elem) (caddr elem)))
+	   (setq elem (cdddr elem)))))
 
        ;; If first is upcase and second downcase (one element)
        ((and (molar-mass-upcase-p (car elem))
@@ -240,9 +239,8 @@ The function returns pairs of (atoms - elements)"
 		  (progn
 		    (setq p2 (concat p2 (car elem)))
 		    (setq elem (cdr elem)))))
-	  (progn
-	    (setq p2 "1")
-	    (setq elem (cddr elem)))))
+	  ((setq p2 "1")
+	   (setq elem (cddr elem)))))
 
        ;; If there're two upcase letters (two elements)
        ((and (molar-mass-upcase-p (car elem))
