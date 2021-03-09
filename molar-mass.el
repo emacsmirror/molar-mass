@@ -143,8 +143,7 @@
     ("Rg" 272.00)
     ("Cn" 285.00)
     ("Fl" 289.00)
-    ("Lv" 292.00)
-    ))
+    ("Lv" 292.00)))
 
 (defcustom molar-mass-significant-digits 3
   "Number of significant digits of the result of molar mass")
@@ -158,7 +157,7 @@
 		    (region-beginning)
 		    (region-end))
 		 (read-string "Formula: ")))
-	 (elements (mapcar 'char-to-string data))
+	 (elements (mapcar #'char-to-string data))  
 	 (result-string-format
 	  (concat "Molar mass of %s: %."
 		  (int-to-string molar-mass-significant-digits)
@@ -269,7 +268,7 @@ The function returns pairs of (atoms - elements)"
 Returns float number."
   (molar-mass-total-mass
    (molar-mass-pairs-list
-    (mapcar 'char-to-string formula))))
+    (mapcar #'char-to-string formula))))
 
 (defun molar-mass-upcase-p (char)
   "Return t if CHAR is upcase, nil if not."
