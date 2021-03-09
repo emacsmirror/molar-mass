@@ -71,7 +71,7 @@
     ("Y" 88.90585)
     ("Zr" 91.224)
     ("Nb" 92.90638)
-    ("Mo" 95.94)                
+    ("Mo" 95.94)
     ("Tc" 98.00)
     ("Ru" 101.07)
     ("Rh" 102.9055)
@@ -146,7 +146,8 @@
     ("Lv" 292.00)))
 
 (defcustom molar-mass-significant-digits 3
-  "Number of significant digits of the result of molar mass")
+  "Number of significant digits of the result of molar mass."
+  :group 'molar-mass)
 
 ;;;###autoload
 (defun molar-mass ()
@@ -157,7 +158,7 @@
 		    (region-beginning)
 		    (region-end))
 		 (read-string "Formula: ")))
-	 (elements (mapcar #'char-to-string data))  
+	 (elements (mapcar #'char-to-string data))
 	 (result-string-format
 	  (concat "Molar mass of %s: %."
 		  (int-to-string molar-mass-significant-digits)
@@ -180,10 +181,10 @@
   "ELEM is a processed list of pairs (atoms - atomic mass).
 Returns the total mass of the molecule."
   (let (($total-mass 0))
-    (if (or
+    (when (or
 	 (/= (% (length elem) 2) 0)
 	 (member 0 elem))
-	(molar-mass-errors 3))
+	(molar-mass-error-in-formula))
     (while elem
       (setq $total-mass
 	    (+ $total-mass
@@ -201,7 +202,9 @@ The function returns pairs of (atoms - elements)"
       (cond
        ;; If paren in list, molar-mass-cut-list-in and call recursively.
        ((member "(" elem)
-	(or (setq p2 (cadr (member ")" elem))) (molar-mass-errors 1))
+	(or
+	 (setq p2 (cadr (member ")" elem)))
+	 (molar-mass-error-lacks-paren))
 	(setq p1 (molar-mass-total-mass
 		  (molar-mass-pairs-list
                    (molar-mass-cut-list-in elem "(" ")"))))
@@ -212,7 +215,7 @@ The function returns pairs of (atoms - elements)"
 	     (molar-mass-number-p (cadr elem)))
 	(or
 	 (setq p1 (cadr (assoc (car elem) molar-mass-elements-mass)))
-	 (molar-mass-errors 2 (car elem)))
+	 (molar-mass-error-non-valid-element (car elem)))
 	 
 	(if (not (molar-mass-number-p (caddr elem)))
 	    (progn
@@ -229,7 +232,7 @@ The function returns pairs of (atoms - elements)"
 	(or
 	 (setq p1 (cadr (assoc (concat (car elem) (cadr elem))
                               molar-mass-elements-mass)))
-	 (molar-mass-errors 2 (concat (car elem) (cadr elem))))
+	 (molar-mass-error-non-valid-element (concat (car elem) (cadr elem))))
 	(if (molar-mass-number-p (caddr elem))
 	    (progn
 	      (setq p2 (caddr elem))
@@ -247,12 +250,12 @@ The function returns pairs of (atoms - elements)"
 	     (molar-mass-upcase-p (cadr elem)))
 	(or
 	 (setq p1 (cadr (assoc (car elem) molar-mass-elements-mass)))
-	 (molar-mass-errors 2 (car elem)))
+	 (molar-mass-error-non-valid-element (car elem)))
 	(setq p2 "1")
 	(setq elem (cdr elem)))
        
        ;; If not any cond
-       (t (molar-mass-errors 3)))
+       (t (molar-mass-error-in-formula)))
       
       ;; Update list pairs
       (setq pairs (cons p1 pairs))
@@ -271,7 +274,7 @@ Returns float number."
 (defun molar-mass-upcase-p (char)
   "Return t if CHAR is upcase, nil if not."
   (let ((case-fold-search nil))
-    (if char 
+    (if char
       (string-match-p "[A-Z]" char))))
   
 (defun molar-mass-number-p (char)
@@ -304,17 +307,17 @@ Returns float number."
       (setq list (cdr list)))
     (reverse cut-list)))
 
-(defun molar-mass-error-lacks-paren () 
-  "Error function when lacks a number after parentheses"
+(defun molar-mass-error-lacks-paren ()
+  "Error function when lacks a number after parentheses."
   (error "Error: Lacks a number after closing parentheses"))
 
 (defun molar-mass-error-non-valid-element (error-data)
-  "ERROR-DATA provides the letter not corresponding to an element"
+  "ERROR-DATA provides the letter not corresponding to an element."
   (error "Error: %s is not a valid element" error-data))
 
-(defun molar-mass-error-in-formula (error-data)
-  "ERROR-DATA provides the formula when there is an unknown error"
-  (error "There is an error in your formula" error-data))
+(defun molar-mass-error-in-formula ()
+  "Error function to an unknown error in formula."
+  (error "There is an error in your formula"))
   
 (provide 'molar-mass)
 
