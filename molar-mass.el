@@ -19,13 +19,14 @@
 ;; Use it with M-x molar-mass
 ;; 
 ;; It works interactively and also with region.  You can mark a region with
-;; a formula and it will give you its molar mass
+;; a formula and it will give you its molar mass.
+;;
 ;; Example:
 
-;;Mark region : H2O
-;;Call M-x molar-mass
+;; Mark region : H2O
+;; Call M-x molar-mass
 ;;
-;;=> Molar mass of H2O : 18.015 g/mol (uma)
+;; => Molar mass of H2O : 18.015 g/mol (uma)
 ;;
 ;;; Code:
 
@@ -145,8 +146,9 @@
     ("Fl" 289.00)
     ("Lv" 292.00)))
 
-(defcustom molar-mass-significant-digits 3
-  "Number of significant digits of the result of molar mass."
+(defcustom molar-mass-significant-decimals 3
+  "Number of significant decimals of the result of molar mass."
+  :type '(integer)
   :group 'molar-mass)
 
 ;;;###autoload
@@ -161,7 +163,7 @@
 	 (elements (mapcar #'char-to-string data))
 	 (result-string-format
 	  (concat "Molar mass of %s: %."
-		  (int-to-string molar-mass-significant-digits)
+		  (int-to-string molar-mass-significant-decimals)
 		  "f g/mol (uma)"))
 	 (elements-aux '()))   ;; auxiliar list to clean blanks and
     ;; dashes in the next while
@@ -222,8 +224,8 @@ The function returns pairs of (atoms - elements)"
 	      (setq p2 (cadr elem))
 	      (setq elem (cddr elem)))
 	  ;; If there's two numbers
-	  ((setq p2 (concat (cadr elem) (caddr elem)))
-	   (setq elem (cdddr elem)))))
+	  (setq p2 (concat (cadr elem) (caddr elem)))
+	  (setq elem (cdddr elem))))
 
        ;; If first is upcase and second downcase (one element)
        ((and (molar-mass-upcase-p (car elem))
@@ -242,8 +244,8 @@ The function returns pairs of (atoms - elements)"
 		  (progn
 		    (setq p2 (concat p2 (car elem)))
 		    (setq elem (cdr elem)))))
-	  ((setq p2 "1")
-	   (setq elem (cddr elem)))))
+	  (setq p2 "1")
+	  (setq elem (cddr elem))))
 
        ;; If there're two upcase letters (two elements)
        ((and (molar-mass-upcase-p (car elem))
@@ -274,14 +276,12 @@ Returns float number."
 (defun molar-mass-upcase-p (char)
   "Return t if CHAR is upcase, nil if not."
   (let ((case-fold-search nil))
-    (if char
-      (string-match-p "[A-Z]" char))))
-  
+    (and char (string-match-p "[A-Z]" char))))
+      
 (defun molar-mass-number-p (char)
   "Return t if CHAR is a number, nil if not."
-  (if char
-    (if (string-match-p "[0-9]" char) t)))
-
+  (and char (string-match-p "[0-9]" char) t))
+  
 (defun molar-mass-cut-list-in (list first last)
   "Cut LIST and return another list with elements between FIRST and LAST."
   (let ((cut-list '())) ;; list to return
