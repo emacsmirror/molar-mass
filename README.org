@@ -1,0 +1,59 @@
+* molar-mass.el
+
+Molar-mass is an utility that calculates molar mass (aka molecular
+mass or molecular weight) of a given molecule.
+
+** Installation
+
+After installing the package (or copying it to your load-path), add this
+to your init file:
+
+#+begin_src emacs-lisp
+(require 'molar-mass)
+#+end_src
+
+** Usage
+
+It works interactively (entering your formula at the minibuffer) and
+also with region.
+
+~M-x molar-mass~ goes to the minibuffer. Enter formula (Ex. KMnO4):
+
+#+NAME: img1
+#+ATTR_ORG: :width 60
+#+ATTR_HTML: :width 60px
+[[file:./img/img1.jpg]]
+
+It returns:
+
+#+NAME: img2
+#+ATTR_ORG: :width 60
+#+ATTR_HTML: :width 60px
+[[file:./img/img2.jpg]]
+
+It also accepts parenthesis at the formula. By example:
+
+Fe(OH)2
+
+"Molar mass of Fe(OH)2 : 89.860 g/mol (uma)"
+
+You can use it with region. Select a region with your formula and call
+~M-x molar-mass~:
+
+#+NAME: img3
+#+ATTR_ORG: :width 60
+#+ATTR_HTML: :width 60px
+[[file:./img/img3.jpg]]
+
+It returns:
+
+#+NAME: img4
+#+ATTR_ORG: :width 60
+#+ATTR_HTML: :width 60px
+[[file:./img/img4.jpg]]
+
+
+
+
+
+
