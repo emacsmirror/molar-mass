@@ -169,11 +169,11 @@
     ;; dashes in the next while
     
     (while elements
-      (if (not (equal (car elements) (or " " "-")))
+      (if (not (member (car elements) '(" " "-" "_")))
 	  (push (car elements) elements-aux))
       (setq elements (cdr elements)))
     (setq elements (reverse elements-aux))
-
+    
     (print
      (format result-string-format
 	     data
