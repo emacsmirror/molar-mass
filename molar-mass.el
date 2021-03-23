@@ -31,7 +31,7 @@
 ;;; Code:
 
 (defconst molar-mass-elements-mass
-  '(("H" 1.00794)
+  '(("H" 1.00797)
     ("He" 4.002602)
     ("Li" 6.941)
     ("Be" 9.012182)
@@ -143,8 +143,12 @@
     ("Ds" 281.00)
     ("Rg" 272.00)
     ("Cn" 285.00)
+    ("Nh" 286.00)
     ("Fl" 289.00)
-    ("Lv" 292.00)))
+    ("Mc" 290.00)
+    ("Lv" 292.00)
+    ("Ts" 294.00)
+    ("Og" 294.00)))
 
 (defcustom molar-mass-significant-decimals 3
   "Number of significant decimals of the result of molar mass."
@@ -169,30 +173,29 @@
     ;; dashes in the next while
     
     (while elements
-      (if (not (member (car elements) '(" " "-" "_")))
+      (if (not (member (car elements) '(" " "-" "_" "{" "}")))
 	  (push (car elements) elements-aux))
       (setq elements (cdr elements)))
     (setq elements (reverse elements-aux))
     
-    (print
-     (format result-string-format
+    (message result-string-format
 	     data
-	     (molar-mass-total-mass (molar-mass-pairs-list elements))))))
+	     (molar-mass-total-mass (molar-mass-pairs-list elements)))))
 
 (defun molar-mass-total-mass (elem)
   "ELEM is a processed list of pairs (atoms - atomic mass).
 Returns the total mass of the molecule."
-  (let (($total-mass 0))
+  (let ((total-mass 0))
     (when (or
 	 (/= (% (length elem) 2) 0)
 	 (member 0 elem))
 	(molar-mass-error-in-formula))
     (while elem
-      (setq $total-mass
-	    (+ $total-mass
+      (setq total-mass
+	    (+ total-mass
 	       (* (car elem) (cadr elem))))
       (setq elem (cddr elem)))
-    $total-mass))
+    total-mass))
 
 (defun molar-mass-pairs-list (elem)
   "ELEM is a list of chars from the original string representing a molecule.
@@ -309,15 +312,15 @@ Returns float number."
 
 (defun molar-mass-error-lacks-paren ()
   "Error function when lacks a number after parentheses."
-  (error "Error: Lacks a number after closing parentheses"))
+  (user-error "Error: Lacks a number after closing parentheses"))
 
 (defun molar-mass-error-non-valid-element (error-data)
   "ERROR-DATA provides the letter not corresponding to an element."
-  (error "Error: %s is not a valid element" error-data))
+  (user-error "Error: %s is not a valid element" error-data))
 
 (defun molar-mass-error-in-formula ()
   "Error function to an unknown error in formula."
-  (error "There is an error in your formula"))
+  (user-error "There is an error in your formula"))
   
 (provide 'molar-mass)
 
