@@ -5,9 +5,10 @@
 ;;
 ;; Author: Sergi Ruiz Trepat
 ;; Created: 2021
-;; Version: 0.1
+;; Version: 1.0
 ;; Keywords: convenience, chemistry
 ;; Homepage: https://github.com/sergiruiztrepat/molar-mass.el
+;; Package-Requires: ((emacs "24.3"))
 ;;
 ;; Molar-mass is free software; you can redistribute it and/or modify it
 ;; under the terms of the GNU General Public License as published by
@@ -15,18 +16,36 @@
 ;; (at your option) any later version.
 ;;
 ;;; Commentary:
+;; After installing the package (or copying it to your load-path), add this
+;; to your init file:
 ;;
-;; Use it with M-x molar-mass
-;; 
-;; It works interactively and also with region.  You can mark a region with
-;; a formula and it will give you its molar mass.
+;; (require 'molar-mass)
+;;
+;; It works interactively (entering your formula at the minibuffer) and
+;; also with region.
+;;
+;; M-x molar-mass => goes to the minibuffer.  Enter formula
+;; (Ex.  KMnO4)
+;;
+;; It returns:
+;;
+;; => Molar mass of KMnO4  : 158.034 g/mol (uma)
+;;
+;; You can mark a region with a formula and it will give you its molar
+;; mass.
 ;;
 ;; Example:
-
+;;
 ;; Mark region : H2O
 ;; Call M-x molar-mass
 ;;
 ;; => Molar mass of H2O : 18.015 g/mol (uma)
+;;
+;; Molar-mass supports formulas with parentheses (Ex: Fe(OH)2), and it
+;; works in LaTeX sintax (Ex: Fe(OH)_{2}).
+;;
+;; You can customize the result's significant decimals (default is 3):
+;; M-x customize-variable > molar-mass-significant-decimals
 ;;
 ;;; Code:
 
@@ -170,121 +189,127 @@
 		  (int-to-string molar-mass-significant-decimals)
 		  "f g/mol (uma)"))
 	 (elements-aux '()))   ;; auxiliar list to clean blanks and
-    ;; dashes in the next while
+                               ;; dashes in the next while
     
     (while elements
       (if (not (member (car elements) '(" " "-" "_" "{" "}")))
 	  (push (car elements) elements-aux))
       (setq elements (cdr elements)))
     (setq elements (reverse elements-aux))
+
+    (if (molar-mass-missing-paren elements)
+	(molar-mass-error-lacks-paren))
     
+    (setq elements (molar-mass-join-letters elements))
+    (setq elements (molar-mass-join-numbers elements))
+    (setq elements (molar-mass-insert-1 elements))
+    (setq elements (molar-mass-subst-numbers elements))
+    (setq elements (molar-mass-subst-values elements))
+        
     (message result-string-format
 	     data
-	     (molar-mass-total-mass (molar-mass-pairs-list elements)))))
+	     (molar-mass-calculate elements))))
 
-(defun molar-mass-total-mass (elem)
-  "ELEM is a processed list of pairs (atoms - atomic mass).
-Returns the total mass of the molecule."
-  (let ((total-mass 0))
-    (when (or
-	 (/= (% (length elem) 2) 0)
-	 (member 0 elem))
-	(molar-mass-error-in-formula))
+;;
+;; Functions to process string formula
+;; 
+
+(defun molar-mass-join-letters (elem)
+  "Join upcase and downcase letters in list ELEM."
+  (let (first second elem-aux)
     (while elem
-      (setq total-mass
-	    (+ total-mass
-	       (* (car elem) (cadr elem))))
+      (setq first (car elem))
+      (setq second (cadr elem))
+      (if (and
+	   (molar-mass-upcase-p first)
+	   (molar-mass-downcase-p second))
+	  (progn
+	    (setq elem-aux (cons (concat first second) elem-aux))
+	    (setq elem (cddr elem)))
+	(setq elem-aux (cons first elem-aux))
+	(setq elem (cdr elem))))
+    (reverse elem-aux)))
+
+(defun molar-mass-join-numbers (elem)
+  "Join numbers when there are two of them one after another in list ELEM."
+  (let (first second elem-aux)
+    (while elem
+      (setq first (car elem))
+      (setq second (cadr elem))
+      (if (and
+	   (molar-mass-number-p first)
+	   (molar-mass-number-p second))
+	  (progn
+	    (setq elem-aux (cons (concat first second) elem-aux))
+	    (setq elem (cddr elem)))
+	(setq elem-aux (cons first elem-aux))
+	(setq elem (cdr elem))))
+    (reverse elem-aux)))
+
+(defun molar-mass-insert-1 (elem)
+  "Insert number 1 when an element has no coeficient in list ELEM."
+  (let (first second elem-aux)
+    (while elem
+      (setq first (car elem))
+      (setq second (cadr elem))
+      (if (and
+	   (not (molar-mass-number-p first))
+	   (not (molar-mass-paren-p first))
+	   (not (molar-mass-number-p second)))
+	  (progn
+	    (setq elem-aux (cons first elem-aux))
+	    (setq elem-aux (cons "1" elem-aux))
+	    (setq elem (cdr elem)))
+	(setq elem-aux (cons first elem-aux))
+	(setq elem (cdr elem))))
+    (reverse elem-aux)))
+
+(defun molar-mass-subst-numbers (elem)
+  "Substitute number-strings for integers in list ELEM."
+  (let (item elem-aux)
+    (dolist (item elem elem-aux)
+      (if (molar-mass-number-p item)
+	  (push (string-to-number item) elem-aux)
+	(push item elem-aux)))
+    (reverse elem-aux)))
+
+(defun molar-mass-subst-values (elem)
+  "Substitutes the name of an element for its molar mass in list ELEM."
+  (let (item elem-aux)
+    (dolist (item elem elem-aux)
+      (if (and (stringp item)
+	       (not (molar-mass-paren-p item)))
+	  (if (not (cadr (assoc item molar-mass-elements-mass)))
+	      (molar-mass-error-non-valid-element item)
+	    (push (cadr (assoc item molar-mass-elements-mass)) elem-aux))
+	(push item elem-aux)))
+    (reverse elem-aux)))
+
+;;
+;; Main calculation function
+;;
+
+(defun molar-mass-calculate (elem)
+  "Calculate molar mass of data in list ELEM."
+  (let ((total 0) first second)
+    (while elem
+      (if (equal (car elem) "(")
+	  (progn
+	    (setq first (molar-mass-calculate
+			 (molar-mass-cut-list-in elem "(" ")")))
+	    (setq elem (molar-mass-cut-list-out elem "(" ")"))
+	    (if (integerp (car elem))
+		(setq second (car elem))
+	      (molar-mass-error-lacks-number)))
+	(setq first (car elem))
+	(setq second (cadr elem)))
+      (setq total (+ total (* first second)))
       (setq elem (cddr elem)))
-    total-mass))
+    total))
 
-(defun molar-mass-pairs-list (elem)
-  "ELEM is a list of chars from the original string representing a molecule.
-The function returns pairs of (atoms - elements)"
-  (let (p1 ;;first element of a pair (symbol)
-	p2 ;; second element of a pair (number)
-	(pairs '()))
-    (while (>= (length elem) 1)
-      (cond
-       ;; If paren in list, molar-mass-cut-list-in and call recursively.
-       ((member "(" elem)
-	(or
-	 (setq p2 (cadr (member ")" elem)))
-	 (molar-mass-error-lacks-paren))
-	(setq p1 (molar-mass-total-mass
-		  (molar-mass-pairs-list
-                   (molar-mass-cut-list-in elem "(" ")"))))
-	(setq elem (molar-mass-cut-list-out elem "(" ")")))
-
-       ;; If first is upcase (element) and second is number
-       ((and (molar-mass-upcase-p (car elem))
-	     (molar-mass-number-p (cadr elem)))
-	(or
-	 (setq p1 (cadr (assoc (car elem) molar-mass-elements-mass)))
-	 (molar-mass-error-non-valid-element (car elem)))
-	 
-	(if (not (molar-mass-number-p (caddr elem)))
-	    (progn
-	      (setq p2 (cadr elem))
-	      (setq elem (cddr elem)))
-	  ;; If there's two numbers
-	  (setq p2 (concat (cadr elem) (caddr elem)))
-	  (setq elem (cdddr elem))))
-
-       ;; If first is upcase and second downcase (one element)
-       ((and (molar-mass-upcase-p (car elem))
-	     (and (not (molar-mass-upcase-p (cadr elem)))
-		  (not (molar-mass-number-p (cadr elem)))))
-	(or
-	 (setq p1 (cadr (assoc (concat (car elem) (cadr elem))
-                              molar-mass-elements-mass)))
-	 (molar-mass-error-non-valid-element (concat (car elem) (cadr elem))))
-	(if (molar-mass-number-p (caddr elem))
-	    (progn
-	      (setq p2 (caddr elem))
-	      (setq elem (cdddr elem))
-	      ;; If there're two numbers
-	      (if (molar-mass-number-p (car elem))
-		  (progn
-		    (setq p2 (concat p2 (car elem)))
-		    (setq elem (cdr elem)))))
-	  (setq p2 "1")
-	  (setq elem (cddr elem))))
-
-       ;; If there're two upcase letters (two elements)
-       ((and (molar-mass-upcase-p (car elem))
-	     (molar-mass-upcase-p (cadr elem)))
-	(or
-	 (setq p1 (cadr (assoc (car elem) molar-mass-elements-mass)))
-	 (molar-mass-error-non-valid-element (car elem)))
-	(setq p2 "1")
-	(setq elem (cdr elem)))
-       
-       ;; If not any cond
-       (t (molar-mass-error-in-formula)))
-      
-      ;; Update list pairs
-      (setq pairs (cons p1 pairs))
-      (setq pairs (cons (string-to-number p2) pairs)))
-    ;; return pairs
-    pairs))
-
-(defun molar-mass-progm (formula)
-  "Function to use it programmaticly with string FORMULA.
-
-Returns float number."
-  (molar-mass-total-mass
-   (molar-mass-pairs-list
-    (mapcar #'char-to-string formula))))
-
-(defun molar-mass-upcase-p (char)
-  "Return t if CHAR is upcase, nil if not."
-  (let ((case-fold-search nil))
-    (and char (string-match-p "[A-Z]" char))))
-      
-(defun molar-mass-number-p (char)
-  "Return t if CHAR is a number, nil if not."
-  (and char (string-match-p "[0-9]" char) t))
-  
+;;
+;; Cut list functions (to handle parenthesis)
+;;
 (defun molar-mass-cut-list-in (list first last)
   "Cut LIST and return another list with elements between FIRST and LAST."
   (let ((cut-list '())) ;; list to return
@@ -293,7 +318,7 @@ Returns float number."
       (push (car list) cut-list)
       (setq list (cdr list)))
     (reverse cut-list)))
-    
+
 (defun molar-mass-cut-list-out (list first last)
   "Cut LIST and return another list with elements not between FIRST and LAST."
   (let ((cut-list '()))
@@ -304,24 +329,57 @@ Returns float number."
     (while (not (equal (car list) last))
       (pop list))
     
-    (setq list (cddr list))
+    (setq list (cdr list))
     (while list
       (push (car list) cut-list)
       (setq list (cdr list)))
     (reverse cut-list)))
 
-(defun molar-mass-error-lacks-paren ()
+;;
+;; Predicate functions
+;;
+
+(defun molar-mass-upcase-p (char)
+  "Return t if CHAR is upcase, nil if not."
+  (let ((case-fold-search nil))
+    (and char (string-match-p "[A-Z]" char))))
+
+(defun molar-mass-downcase-p (char)
+  "Return t if CHAR is downcase, nil if not."
+  (let ((case-fold-search nil))
+    (and char (string-match-p "[a-z]" char))))
+      
+(defun molar-mass-number-p (char)
+  "Return t if CHAR is a number, nil if not."
+  (and char (string-match-p "[0-9]" char) t))
+
+(defun molar-mass-paren-p (char)
+  "Return t if CHAR is parentheses, nil if not."
+  (and char (string-match-p "[()]" char) t))
+
+(defun molar-mass-missing-paren (elem)
+  "Return t if there is missing paren in list ELEM."
+  (or (and
+       (member "(" elem) (not (member ")" elem)))
+      (and
+       (member ")" elem) (not (member "(" elem)))))
+
+;;
+;; Error functions
+;;
+
+(defun molar-mass-error-lacks-number ()
   "Error function when lacks a number after parentheses."
   (user-error "Error: Lacks a number after closing parentheses"))
+
+(defun molar-mass-error-lacks-paren ()
+  "Error function when lacks parentheses."
+  (user-error "Error: Lacks parentheses"))
 
 (defun molar-mass-error-non-valid-element (error-data)
   "ERROR-DATA provides the letter not corresponding to an element."
   (user-error "Error: %s is not a valid element" error-data))
 
-(defun molar-mass-error-in-formula ()
-  "Error function to an unknown error in formula."
-  (user-error "There is an error in your formula"))
-  
 (provide 'molar-mass)
 
 ;;; molar-mass.el ends here
