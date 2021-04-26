@@ -31,7 +31,7 @@ It returns:
 #+ATTR_HTML: :width 60px
 [[file:./img/img2.jpg]]
 
-It also accepts parenthesis at the formula. By example:
+It also accepts parentheses at the formula. By example:
 
 Fe(OH)2
 

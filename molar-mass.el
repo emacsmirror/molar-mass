@@ -174,6 +174,8 @@
   :type '(integer)
   :group 'molar-mass)
 
+(require 'thingatpt)
+
 ;;;###autoload
 (defun molar-mass ()
   "Calculates molar mass of a molecule."
@@ -182,7 +184,11 @@
 		   (buffer-substring-no-properties
 		    (region-beginning)
 		    (region-end))
-		 (read-string "Formula: ")))
+		 (completing-read "Formula: "
+				  (mapcar #'car molar-mass-elements-mass)
+				  nil t (car (assoc (thing-at-point
+                             'word) molar-mass-elements-mass)))))
+
 	 (elements (mapcar #'char-to-string data))
 	 (result-string-format
 	  (concat "Molar mass of %s: %."
