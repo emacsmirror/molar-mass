@@ -47,6 +47,7 @@
 ;; You can customize the result's significant decimals (default is 3):
 ;; M-x customize-variable > molar-mass-significant-decimals
 ;;
+;; Please email me your comments to sergi@aloe-associacio.org
 ;;; Code:
 
 (defconst molar-mass-elements-mass
